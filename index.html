@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToolForge - 在线开发者工具箱</title>
+  <meta name="description" content="ToolForge 提供专业高效的在线开发者工具，涵盖 JSON 格式化、Base64 编解码、时间戳转换、哈希计算等功能。">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       RESET & BASE
+       ============================================ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans SC', 'Outfit', sans-serif;
+      background: #080b10;
+      color: #c8ccd4;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -2;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(14,165,133,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6,182,212,0.05) 0%, transparent 50%);
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    a { color: #0ea585; text-decoration: none; transition: color 0.2s; }
+    a:hover { color: #14e8b9; }
+    ::selection { background: rgba(14,165,133,0.3); color: #fff; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0d1117; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    /* ============================================
+       NAVIGATION
+       ============================================ */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(8,11,16,0.85);
+      backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      height: 60px;
+    }
+    .nav-inner {
+      max-width: 1320px; margin: 0 auto; height: 100%;
+      padding: 0 32px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800; font-size: 20px; color: #f0f6fc;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+      margin-right: 16px;
+    }
+    .nav-brand .brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #0ea585, #06b6d4);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: #fff;
+      box-shadow: 0 0 20px rgba(14,165,133,0.3);
+    }
+    .nav-brand span.accent { color: #0ea585; }
+    .nav-search {
+      flex: 1; max-width: 380px; position: relative;
+    }
+    .nav-search input {
+      width: 100%; height: 36px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0 14px 0 36px;
+      color: #c8ccd4; font-size: 13px;
+      font-family: inherit;
+      transition: all 0.25s;
+      outline: none;
+    }
+    .nav-search input::placeholder { color: #475569; }
+    .nav-search input:focus {
+      border-color: rgba(14,165,133,0.5);
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 0 0 3px rgba(14,165,133,0.1);
+    }
+    .nav-search .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: #475569; font-size: 14px; pointer-events: none;
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 2px;
+      margin-left: auto;
+    }
+    .nav-links a {
+      padding: 6px 14px; border-radius: 6px;
+      font-size: 13.5px; font-weight: 500; color: #8b949e;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-links a:hover { color: #e6edf3; background: rgba(255,255,255,0.05); }
+    .nav-links a.active { color: #0ea585; background: rgba(14,165,133,0.08); }
+    .nav-mobile-toggle {
+      display: none; background: none; border: none;
+      color: #8b949e; font-size: 22px; cursor: pointer;
+      padding: 4px; margin-left: auto;
+    }
+
+    /* ============================================
+       HERO / HEADER
+       ============================================ */
+    .hero {
+      padding: 100px 32px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800; color: #f0f6fc;
+      letter-spacing: -1px; line-height: 1.15;
+      margin-bottom: 12px;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #0ea585, #06b6d4, #8b5cf6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 16px; color: #6b7b8d; max-width: 520px;
+      margin: 0 auto 28px; line-height: 1.7;
+    }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px;
+      margin-top: 20px;
+    }
+    .hero-stat {
+      text-align: center;
+    }
+    .hero-stat .num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 28px; font-weight: 700; color: #0ea585;
+    }
+    .hero-stat .label {
+      font-size: 12px; color: #4a5568; margin-top: 2px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    /* ============================================
+       SECTION COMMON
+       ============================================ */
+    .container { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+    .section { padding: 48px 0; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px; font-weight: 700; color: #f0f6fc;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title .icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+    }
+    .section-title .icon.green { background: rgba(14,165,133,0.12); }
+    .section-title .icon.blue { background: rgba(59,130,246,0.12); }
+    .section-title .icon.purple { background: rgba(139,92,246,0.12); }
+    .section-title .icon.orange { background: rgba(245,158,11,0.12); }
+    .section-more {
+      font-size: 13px; color: #4a5568;
+      display: flex; align-items: center; gap: 4px;
+      transition: color 0.2s;
+    }
+    .section-more:hover { color: #0ea585; }
+    .section-divider {
+      border: none; border-top: 1px solid rgba(255,255,255,0.04);
+      margin: 0;
+    }
+
+    /* ============================================
+       TOOL CATEGORIES (Tabs)
+       ============================================ */
+    .tool-tabs {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .tool-tabs::-webkit-scrollbar { display: none; }
+    .tool-tab {
+      padding: 7px 18px; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      color: #6b7b8d; background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tool-tab:hover { color: #c8ccd4; background: rgba(255,255,255,0.03); }
+    .tool-tab.active {
+      color: #0ea585; background: rgba(14,165,133,0.08);
+      border-color: rgba(14,165,133,0.2);
+    }
+
+    /* ============================================
+       TOOL CARDS GRID
+       ============================================ */
+    .tool-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .tool-card {
+      background: rgba(13,17,23,0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px 18px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--card-accent, #0ea585), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .tool-card:hover {
+      border-color: rgba(14,165,133,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 40px rgba(14,165,133,0.05);
+    }
+    .tool-card:hover::before { opacity: 1; }
+    .tool-card .card-emoji {
+      font-size: 28px; margin-bottom: 12px;
+      display: block;
+      filter: saturate(0.8);
+    }
+    .tool-card .card-name {
+      font-size: 14px; font-weight: 600; color: #e6edf3;
+      margin-bottom: 6px;
+    }
+    .tool-card .card-desc {
+      font-size: 11.5px; color: #4a5568; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .tool-card .card-tag {
+      position: absolute; top: 10px; right: 10px;
+      font-size: 9px; font-weight: 600;
+      padding: 2px 6px; border-radius: 4px;
+      background: rgba(14,165,133,0.12); color: #0ea585;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .tool-card .card-tag.coming {
+      background: rgba(107,114,128,0.15); color: #6b7280;
+    }
+
+    /* ============================================
+       ARTICLE / CONTENT CARDS
+       ============================================ */
+    .article-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .article-card {
+      background: rgba(13,17,23,0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 22px 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .article-card:hover {
+      border-color: rgba(59,130,246,0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+    }
+    .article-card .card-meta {
+      font-size: 11px; color: #4a5568; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .article-card .card-meta .dot { width: 3px; height: 3px; background: #334155; border-radius: 50%; }
+    .article-card h3 {
+      font-size: 15px; font-weight: 600; color: #e6edf3;
+      margin-bottom: 8px; line-height: 1.5;
+    }
+    .article-card p {
+      font-size: 12.5px; color: #4a5568; line-height: 1.6;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* ============================================
+       REPO CARDS
+       ============================================ */
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .repo-card {
+      background: rgba(13,17,23,0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .repo-card:hover {
+      border-color: rgba(139,92,246,0.2);
+      transform: translateY(-2px);
+    }
+    .repo-card .repo-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .repo-card .repo-icon { font-size: 20px; }
+    .repo-card .repo-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px; font-weight: 600; color: #e6edf3;
+    }
+    .repo-card .repo-lang {
+      font-size: 10px; padding: 2px 8px; border-radius: 4px;
+      background: rgba(139,92,246,0.1); color: #a78bfa;
+      margin-left: auto; font-weight: 500;
+    }
+    .repo-card .repo-desc {
+      font-size: 12px; color: #4a5568; margin-bottom: 12px; line-height: 1.5;
+    }
+    .repo-card .repo-stats {
+      display: flex; gap: 16px; font-size: 11px; color: #374151;
+    }
+    .repo-card .repo-stats span { display: flex; align-items: center; gap: 4px; }
+
+    /* ============================================
+       SOFTWARE CARDS
+       ============================================ */
+    .soft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .soft-card {
+      background: rgba(13,17,23,0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+      display: flex; gap: 14px; align-items: flex-start;
+    }
+    .soft-card:hover {
+      border-color: rgba(245,158,11,0.2);
+      transform: translateY(-2px);
+    }
+    .soft-card .soft-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      background: rgba(245,158,11,0.08);
+    }
+    .soft-card .soft-info h4 {
+      font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 4px;
+    }
+    .soft-card .soft-info p {
+      font-size: 11.5px; color: #4a5568; line-height: 1.5;
+    }
+
+    /* ============================================
+       FRIEND LINKS
+       ============================================ */
+    .friend-links {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .friend-link {
+      padding: 6px 14px; border-radius: 6px;
+      font-size: 12px; color: #6b7b8d;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.2s;
+    }
+    .friend-link:hover {
+      color: #0ea585; border-color: rgba(14,165,133,0.2);
+      background: rgba(14,165,133,0.05);
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    .footer {
+      padding: 40px 0 32px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      margin-top: 40px;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-left p {
+      font-size: 12px; color: #374151; line-height: 1.8;
+    }
+    .footer-left p a { color: #4a5568; }
+    .footer-right {
+      display: flex; gap: 20px; font-size: 12px; color: #374151;
+    }
+
+    /* ============================================
+       MODAL
+       ============================================ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-box {
+      background: #0d1117;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      width: 100%; max-width: 800px;
+      max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .modal-header h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px; font-weight: 700; color: #f0f6fc;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #6b7b8d; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); color: #e6edf3; }
+    .modal-body { padding: 24px; }
+    .modal-body label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: #8b949e; margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .modal-body textarea,
+    .modal-body input[type="text"],
+    .modal-body input[type="number"],
+    .modal-body select {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #c8ccd4; font-size: 13px;
+      font-family: 'IBM Plex Mono', monospace;
+      resize: vertical; outline: none;
+      transition: border-color 0.2s;
+    }
+    .modal-body textarea:focus,
+    .modal-body input:focus,
+    .modal-body select:focus {
+      border-color: rgba(14,165,133,0.5);
+      box-shadow: 0 0 0 3px rgba(14,165,133,0.08);
+    }
+    .modal-body textarea { min-height: 120px; line-height: 1.6; }
+    .tool-actions {
+      display: flex; gap: 8px; margin: 14px 0;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 8px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea585, #0c9a7b);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(14,165,133,0.25);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #12c09a, #0ea585);
+      box-shadow: 0 4px 16px rgba(14,165,133,0.35);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #c8ccd4;
+      border-color: rgba(255,255,255,0.08);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .btn-danger {
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+      border-color: rgba(239,68,68,0.2);
+    }
+    .btn-danger:hover {
+      background: rgba(239,68,68,0.2);
+    }
+    .result-box {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px; color: #a5d6ff;
+      white-space: pre-wrap; word-break: break-all;
+      min-height: 60px; line-height: 1.6;
+      max-height: 300px; overflow-y: auto;
+    }
+    .result-box.error { color: #ef4444; border-color: rgba(239,68,68,0.2); }
+    .result-box.success { color: #0ea585; border-color: rgba(14,165,133,0.2); }
+    .dual-pane {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .pane-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .inline-group {
+      display: flex; gap: 8px; align-items: center; margin: 12px 0;
+      flex-wrap: wrap;
+    }
+    .inline-group label {
+      margin: 0; white-space: nowrap;
+    }
+    .inline-group input, .inline-group select {
+      width: auto; flex: 1; min-width: 100px;
+    }
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px; margin-top: 16px;
+    }
+    .stat-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px; padding: 14px; text-align: center;
+    }
+    .stat-item .stat-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px; font-weight: 700; color: #0ea585;
+    }
+    .stat-item .stat-label {
+      font-size: 11px; color: #4a5568; margin-top: 4px;
+    }
+    .color-preview {
+      width: 100%; height: 80px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      margin: 12px 0;
+      transition: background-color 0.3s;
+    }
+    .hash-results { margin-top: 14px; }
+    .hash-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .hash-row:last-child { border-bottom: none; }
+    .hash-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px; font-weight: 600; color: #0ea585;
+      width: 70px; flex-shrink: 0;
+    }
+    .hash-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px; color: #8b949e;
+      word-break: break-all; flex: 1;
+    }
+    .hash-copy {
+      background: none; border: none; color: #4a5568;
+      cursor: pointer; font-size: 14px; padding: 4px;
+      transition: color 0.2s;
+    }
+    .hash-copy:hover { color: #0ea585; }
+    .pw-options {
+      display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0;
+    }
+    .pw-option {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #8b949e;
+    }
+    .pw-option input[type="checkbox"] {
+      accent-color: #0ea585;
+    }
+    .pw-strength {
+      height: 4px; border-radius: 2px; margin-top: 8px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+    .pw-strength-bar {
+      height: 100%; border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+    }
+    .regex-flags { display: flex; gap: 8px; margin: 8px 0; }
+    .regex-flag {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; color: #8b949e;
+    }
+    .regex-flag input { accent-color: #0ea585; }
+    .regex-matches {
+      margin-top: 12px; font-size: 12px; color: #6b7b8d;
+    }
+    .regex-matches strong { color: #0ea585; }
+    .highlight-match {
+      background: rgba(14,165,133,0.25);
+      border-radius: 2px; padding: 0 2px;
+      color: #14e8b9;
+    }
+    .qr-output {
+      display: flex; justify-content: center; padding: 20px;
+    }
+    .qr-output canvas { border-radius: 8px; }
+    .toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      background: #0ea585; color: #fff;
+      padding: 10px 24px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 20px rgba(14,165,133,0.4);
+      z-index: 3000;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(12px); } }
+    @keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-12px); } }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+      .nav-inner { padding: 0 16px; }
+      .nav-search { display: none; }
+      .nav-links { display: none; }
+      .nav-mobile-toggle { display: block; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 60px; left: 0; right: 0;
+        background: rgba(8,11,16,0.95);
+        backdrop-filter: blur(20px);
+        padding: 12px; gap: 2px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+      }
+      .hero { padding: 80px 16px 24px; }
+      .hero-stats { gap: 24px; }
+      .container { padding: 0 16px; }
+      .tool-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .dual-pane { grid-template-columns: 1fr; }
+      .modal-box { max-height: 92vh; border-radius: 12px; }
+      .modal-body { padding: 16px; }
+    }
+
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
+    .fade-in {
+      opacity: 0; transform: translateY(16px);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tool-card:nth-child(1) { animation-delay: 0.02s; }
+    .tool-card:nth-child(2) { animation-delay: 0.04s; }
+    .tool-card:nth-child(3) { animation-delay: 0.06s; }
+    .tool-card:nth-child(4) { animation-delay: 0.08s; }
+    .tool-card:nth-child(5) { animation-delay: 0.10s; }
+    .tool-card:nth-child(6) { animation-delay: 0.12s; }
+    .tool-card:nth-child(7) { animation-delay: 0.14s; }
+    .tool-card:nth-child(8) { animation-delay: 0.16s; }
+
+    /* ============================================
+       SCROLL REVEAL
+       ============================================ */
+    .reveal {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1; transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <div class="brand-icon">T</div>
+        Tool<span class="accent">Forge</span>
+      </a>
+      <div class="nav-search">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" id="searchInput" placeholder="搜索工具、文章、资源..." oninput="filterTools(this.value)">
+      </div>
+      <div class="nav-links" id="navLinks">
+        <a href="#tools" class="active">工具</a>
+        <a href="#library">文库</a>
+        <a href="#repos">码库</a>
+        <a href="#software">软件</a>
+        <a href="#links">导航</a>
+      </div>
+      <button class="nav-mobile-toggle" onclick="document.getElementById('navLinks').classList.toggle('open')">&#9776;</button>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <header class="hero">
+    <h1>开发者的<span class="gradient-text">瑞士军刀</span></h1>
+    <p>精心打造的在线工具集，覆盖编码、转换、安全、文本处理等场景，助你高效完成日常工作。</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">24</div><div class="label">在线工具</div></div>
+      <div class="hero-stat"><div class="num">12</div><div class="label">可交互</div></div>
+      <div class="hero-stat"><div class="num">8</div><div class="label">工具分类</div></div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ==================== ONLINE TOOLS ==================== -->
+    <section class="section reveal" id="tools">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon green">&#9881;</span> 在线工具
+        </h2>
+        <a href="#" class="section-more">查看全部 &rarr;</a>
+      </div>
+      <div class="tool-tabs" id="toolTabs">
+        <button class="tool-tab active" data-cat="all">全部</button>
+        <button class="tool-tab" data-cat="encoding">编码/解码</button>
+        <button class="tool-tab" data-cat="text">文本处理</button>
+        <button class="tool-tab" data-cat="dev">开发工具</button>
+        <button class="tool-tab" data-cat="time">时间转换</button>
+        <button class="tool-tab" data-cat="security">安全/加密</button>
+        <button class="tool-tab" data-cat="convert">格式转换</button>
+        <button class="tool-tab" data-cat="media">图片/媒体</button>
+        <button class="tool-tab" data-cat="other">其他</button>
+      </div>
+      <div class="tool-grid" id="toolGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ==================== LIBRARY ==================== -->
+    <section class="section reveal" id="library">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon blue">&#128218;</span> 技术文库
+        </h2>
+        <a href="#" class="section-more">更多文章 &rarr;</a>
+      </div>
+      <div class="article-grid">
+        <div class="article-card">
+          <div class="card-meta"><span>前端开发</span><span class="dot"></span><span>3小时前</span></div>
+          <h3>深入理解 CSS Container Queries：响应式设计的新范式</h3>
+          <p>容器查询让组件可以根据父容器而非视口大小来调整样式，这彻底改变了我们构建可复用组件的方式。</p>
+        </div>
+        <div class="article-card">
+          <div class="card-meta"><span>架构设计</span><span class="dot"></span><span>8小时前</span></div>
+          <h3>从零搭建高可用微服务架构：实践指南</h3>
+          <p>本文介绍了基于 Kubernetes 和 Istio 的微服务架构搭建过程，涵盖服务发现、负载均衡、熔断降级等核心概念。</p>
+        </div>
+        <div class="article-card">
+          <div class="card-meta"><span>AI &amp; ML</span><span class="dot"></span><span>1天前</span></div>
+          <h3>Token 经济学完全指南：理解大模型的成本结构</h3>
+          <p>深入解析 LLM 的 Token 计费机制，帮助你优化 Prompt 设计以降低推理成本，提升应用的经济性。</p>
+        </div>
+        <div class="article-card">
+          <div class="card-meta"><span>数据库</span><span class="dot"></span><span>2天前</span></div>
+          <h3>PostgreSQL 性能调优：从索引策略到查询优化</h3>
+          <p>系统性地介绍 PostgreSQL 的性能优化方法，包括索引设计、查询计划分析、连接池配置等实战技巧。</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ==================== REPOS ==================== -->
+    <section class="section reveal" id="repos">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon purple">&#128187;</span> 开源码库
+        </h2>
+        <a href="#" class="section-more">更多项目 &rarr;</a>
+      </div>
+      <div class="repo-grid">
+        <div class="repo-card">
+          <div class="repo-header">
+            <span class="repo-icon">&#128295;</span>
+            <span class="repo-name">toolforge-cli</span>
+            <span class="repo-lang">Rust</span>
+          </div>
+          <p class="repo-desc">命令行版开发者工具箱，支持管道操作和批量处理，适合自动化工作流场景。</p>
+          <div class="repo-stats">
+            <span>&#11088; 2.4k</span>
+            <span>&#128268; 186</span>
+            <span>更新于 2天前</span>
+          </div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-header">
+            <span class="repo-icon">&#127912;</span>
+            <span class="repo-name">chroma-palette</span>
+            <span class="repo-lang">TypeScript</span>
+          </div>
+          <p class="repo-desc">智能配色方案生成器，基于色彩理论自动计算和谐色板，支持无障碍对比度检测。</p>
+          <div class="repo-stats">
+            <span>&#11088; 1.8k</span>
+            <span>&#128268; 94</span>
+            <span>更新于 5天前</span>
+          </div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-header">
+            <span class="repo-icon">&#128274;</span>
+            <span class="repo-name">vault-encrypt</span>
+            <span class="repo-lang">Go</span>
+          </div>
+          <p class="repo-desc">轻量级密钥管理工具，支持 AES-256-GCM 加密、密钥轮换和审计日志。</p>
+          <div class="repo-stats">
+            <span>&#11088; 967</span>
+            <span>&#128268; 52</span>
+            <span>更新于 1周前</span>
+          </div>
+        </div>
+        <div class="repo-card">
+          <div class="repo-header">
+            <span class="repo-icon">&#128640;</span>
+            <span class="repo-name">deploy-pilot</span>
+            <span class="repo-lang">Shell</span>
+          </div>
+          <p class="repo-desc">一键部署脚本集合，支持 Docker、K8s、Serverless 等多种部署目标。</p>
+          <div class="repo-stats">
+            <span>&#11088; 641</span>
+            <span>&#128268; 38</span>
+            <span>更新于 3天前</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ==================== SOFTWARE ==================== -->
+    <section class="section reveal" id="software">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon orange">&#128230;</span> 效率软件
+        </h2>
+        <a href="#" class="section-more">更多推荐 &rarr;</a>
+      </div>
+      <div class="soft-grid">
+        <div class="soft-card">
+          <div class="soft-icon">&#128396;</div>
+          <div class="soft-info">
+            <h4>VisBug</h4>
+            <p>浏览器可视化设计调试工具，像使用设计软件一样编辑网页元素。</p>
+          </div>
+        </div>
+        <div class="soft-card">
+          <div class="soft-icon">&#127752;</div>
+          <div class="soft-info">
+            <h4>Shadow Palette</h4>
+            <p>CSS 阴影可视化工具，实时调节多层阴影效果并生成代码。</p>
+          </div>
+        </div>
+        <div class="soft-card">
+          <div class="soft-icon">&#128200;</div>
+          <div class="soft-info">
+            <h4>Layer Divider</h4>
+            <p>SVG 分隔线生成器，提供 20+ 种波浪和曲线样式模板。</p>
+          </div>
+        </div>
+        <div class="soft-card">
+          <div class="soft-icon">&#9889;</div>
+          <div class="soft-info">
+            <h4>Metaball Generator</h4>
+            <p>元球动效生成器，导出 CSS 或 Canvas 代码用于网页背景。</p>
+          </div>
+        </div>
+        <div class="soft-card">
+          <div class="soft-icon">&#128276;</div>
+          <div class="soft-info">
+            <h4>HeroSMS</h4>
+            <p>开发测试用短信接收平台，提供临时手机号用于验证码测试。</p>
+          </div>
+        </div>
+        <div class="soft-card">
+          <div class="soft-icon">&#128736;</div>
+          <div class="soft-info">
+            <h4>DevDash</h4>
+            <p>开发者仪表盘，聚合 GitHub、CI/CD、监控等多源信息面板。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ==================== FRIEND LINKS ==================== -->
+    <section class="section reveal" id="links">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="icon blue">&#127760;</span> 友情链接
+        </h2>
+      </div>
+      <div class="friend-links">
+        <a href="#" class="friend-link">GitHub</a>
+        <a href="#" class="friend-link">MDN Web Docs</a>
+        <a href="#" class="friend-link">Stack Overflow</a>
+        <a href="#" class="friend-link">Can I Use</a>
+        <a href="#" class="friend-link">CSS-Tricks</a>
+        <a href="#" class="friend-link">DevDocs</a>
+        <a href="#" class="friend-link">Regex101</a>
+        <a href="#" class="friend-link">JSON Validator</a>
+        <a href="#" class="friend-link">CodePen</a>
+        <a href="#" class="friend-link">Figma</a>
+        <a href="#" class="friend-link">V2EX</a>
+        <a href="#" class="friend-link">掘金</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-left">
+          <p>&copy; 2026 ToolForge &middot; 开发者工具箱</p>
+          <p>使用 HTML / CSS / JavaScript 构建 &middot; <a href="#">开源在 GitHub</a></p>
+        </div>
+        <div class="footer-right">
+          <a href="#">关于我们</a>
+          <a href="#">使用条款</a>
+          <a href="#">隐私政策</a>
+          <a href="#">反馈建议</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODAL ==================== -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    /* ============================================
+       TOOL DATA
+       ============================================ */
+    const TOOLS = [
+      { id:'json', cat:'dev', emoji:'{}', name:'JSON 格式化', desc:'格式化、压缩和校验 JSON 数据', interactive:true, accent:'#0ea585' },
+      { id:'base64', cat:'encoding', emoji:'&#128256;', name:'Base64 编解码', desc:'Base64 编码与解码转换', interactive:true, accent:'#06b6d4' },
+      { id:'url', cat:'encoding', emoji:'&#128279;', name:'URL 编解码', desc:'URL 编码与解码转换', interactive:true, accent:'#8b5cf6' },
+      { id:'timestamp', cat:'time', emoji:'&#128338;', name:'时间戳转换', desc:'Unix 时间戳与日期互转', interactive:true, accent:'#f59e0b' },
+      { id:'hash', cat:'security', emoji:'&#128272;', name:'哈希生成器', desc:'计算文本的 SHA-1 / SHA-256 / SHA-512 摘要', interactive:true, accent:'#ef4444' },
+      { id:'textstat', cat:'text', emoji:'&#128202;', name:'字数统计', desc:'统计字符数、字数、行数等信息', interactive:true, accent:'#3b82f6' },
+      { id:'regex', cat:'dev', emoji:'&#128270;', name:'正则测试', desc:'实时正则表达式匹配测试', interactive:true, accent:'#a855f7' },
+      { id:'color', cat:'convert', emoji:'&#127912;', name:'颜色转换', desc:'HEX / RGB / HSL 颜色互转', interactive:true, accent:'#ec4899' },
+      { id:'password', cat:'security', emoji:'&#128274;', name:'密码生成器', desc:'生成安全的随机密码', interactive:true, accent:'#14b8a6' },
+      { id:'qrcode', cat:'convert', emoji:'&#9638;', name:'二维码生成', desc:'将文本或链接转为二维码', interactive:true, accent:'#6366f1' },
+      { id:'diff', cat:'text', emoji:'&#128196;', name:'文本对比', desc:'比较两段文本的差异', interactive:true, accent:'#f97316' },
+      { id:'case', cat:'text', emoji:'Aa', name:'大小写转换', desc:'英文文本大小写批量转换', interactive:true, accent:'#22c55e' },
+      { id:'unicode', cat:'encoding', emoji:'&#128172;', name:'Unicode 转换', desc:'Unicode 编码与中文互转', interactive:false, accent:'#64748b' },
+      { id:'md5', cat:'security', emoji:'&#128271;', name:'MD5 计算', desc:'计算文本的 MD5 摘要值', interactive:false, accent:'#64748b' },
+      { id:'jwt', cat:'dev', emoji:'&#128275;', name:'JWT 解析', desc:'解码和验证 JWT Token', interactive:false, accent:'#64748b' },
+      { id:'cron', cat:'dev', emoji:'&#920;', name:'Cron 表达式', desc:'Cron 表达式生成和解析', interactive:false, accent:'#64748b' },
+      { id:'yamljson', cat:'convert', emoji:'&#128195;', name:'YAML/JSON', desc:'YAML 与 JSON 格式互转', interactive:false, accent:'#64748b' },
+      { id:'ip', cat:'other', emoji:'&#127760;', name:'IP 查询', desc:'查询 IP 地址的地理信息', interactive:false, accent:'#64748b' },
+      { id:'whois', cat:'other', emoji:'&#128221;', name:'Whois 查询', desc:'查询域名的注册信息', interactive:false, accent:'#64748b' },
+      { id:'dns', cat:'other', emoji:'&#128268;', name:'DNS 查询', desc:'查询域名的 DNS 记录', interactive:false, accent:'#64748b' },
+      { id:'markdown', cat:'text', emoji:'&#128221;', name:'Markdown 预览', desc:'实时 Markdown 渲染预览', interactive:false, accent:'#64748b' },
+      { id:'cssmin', cat:'dev', emoji:'&#128196;', name:'CSS 压缩', desc:'压缩和美化 CSS 代码', interactive:false, accent:'#64748b' },
+      { id:'jsmin', cat:'dev', emoji:'&#128220;', name:'JS 压缩', desc:'压缩和格式化 JavaScript', interactive:false, accent:'#64748b' },
+      { id:'imgcompress', cat:'media', emoji:'&#128247;', name:'图片压缩', desc:'在线压缩和优化图片体积', interactive:false, accent:'#64748b' },
+    ];
+
+    /* ============================================
+       RENDER TOOLS
+       ============================================ */
+    let currentCat = 'all';
+    let searchTerm = '';
+
+    function renderTools() {
+      const grid = document.getElementById('toolGrid');
+      const filtered = TOOLS.filter(t => {
+        const catMatch = currentCat === 'all' || t.cat === currentCat;
+        const searchMatch = !searchTerm ||
+          t.name.toLowerCase().includes(searchTerm) ||
+          t.desc.toLowerCase().includes(searchTerm);
+        return catMatch && searchMatch;
+      });
+      grid.innerHTML = filtered.map((t, i) => `
+        <div class="tool-card fade-in" style="--card-accent:${t.accent}; animation-delay:${i*0.03}s"
+             onclick="${t.interactive ? `openTool('${t.id}')` : `showToast('该工具即将上线')`}">
+          ${t.interactive ? '<span class="card-tag">可用</span>' : '<span class="card-tag coming">即将上线</span>'}
+          <span class="card-emoji">${t.emoji}</span>
+          <div class="card-name">${t.name}</div>
+          <div class="card-desc">${t.desc}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('toolTabs').addEventListener('click', e => {
+      if (!e.target.classList.contains('tool-tab')) return;
+      document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      currentCat = e.target.dataset.cat;
+      renderTools();
+    });
+
+    function filterTools(val) {
+      searchTerm = val.toLowerCase();
+      renderTools();
+    }
+
+    /* ============================================
+       MODAL SYSTEM
+       ============================================ */
+    function openTool(id) {
+      const tool = TOOLS.find(t => t.id === id);
+      if (!tool) return;
+      document.getElementById('modalTitle').innerHTML = `${tool.emoji} ${tool.name}`;
+      const body = document.getElementById('modalBody');
+      body.innerHTML = getToolHTML(id);
+      document.getElementById('modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (id === 'timestamp') initTimestamp();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2200);
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板'));
+    }
+
+    /* ============================================
+       TOOL HTML TEMPLATES
+       ============================================ */
+    function getToolHTML(id) {
+      switch(id) {
+        case 'json': return `
+          <label>输入 JSON</label>
+          <textarea id="jsonInput" placeholder='粘贴 JSON 数据，例如 {"name":"ToolForge","version":1}'></textarea>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="formatJSON()">格式化</button>
+            <button class="btn btn-secondary" onclick="compressJSON()">压缩</button>
+            <button class="btn btn-danger" onclick="clearTool('jsonInput','jsonResult')">清空</button>
+          </div>
+          <label>输出结果</label>
+          <div class="result-box" id="jsonResult">等待输入...</div>`;
+
+        case 'base64': return `
+          <label>输入文本</label>
+          <textarea id="b64Input" placeholder="输入需要编码或解码的文本"></textarea>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="encodeBase64()">编码 (Encode)</button>
+            <button class="btn btn-primary" onclick="decodeBase64()">解码 (Decode)</button>
+            <button class="btn btn-danger" onclick="clearTool('b64Input','b64Result')">清空</button>
+          </div>
+          <label>输出结果</label>
+          <div class="result-box" id="b64Result">等待输入...</div>`;
+
+        case 'url': return `
+          <label>输入文本</label>
+          <textarea id="urlInput" placeholder="输入需要 URL 编码或解码的文本"></textarea>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="encodeURL()">编码</button>
+            <button class="btn btn-primary" onclick="decodeURL()">解码</button>
+            <button class="btn btn-danger" onclick="clearTool('urlInput','urlResult')">清空</button>
+          </div>
+          <label>输出结果</label>
+          <div class="result-box" id="urlResult">等待输入...</div>`;
+
+        case 'timestamp': return `
+          <div class="inline-group">
+            <label>Unix 时间戳</label>
+            <input type="text" id="tsInput" placeholder="例如 1719043200">
+            <button class="btn btn-primary" onclick="tsToDate()">转换</button>
+          </div>
+          <div class="inline-group">
+            <label>日期时间</label>
+            <input type="text" id="dateInput" placeholder="例如 2025-06-22 12:00:00">
+            <button class="btn btn-primary" onclick="dateToTs()">转换</button>
+          </div>
+          <div class="tool-actions">
+            <button class="btn btn-secondary" onclick="setCurrentTs()">当前时间戳</button>
+            <button class="btn btn-secondary" onclick="setCurrentDate()">当前日期</button>
+          </div>
+          <label>转换结果</label>
+          <div class="result-box" id="tsResult">点击上方按钮或输入数据进行转换</div>`;
+
+        case 'hash': return `
+          <label>输入文本</label>
+          <textarea id="hashInput" placeholder="输入需要计算哈希值的文本"></textarea>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="calcHash()">计算哈希</button>
+            <button class="btn btn-danger" onclick="document.getElementById('hashInput').value='';document.getElementById('hashResults').innerHTML=''">清空</button>
+          </div>
+          <div class="hash-results" id="hashResults"></div>`;
+
+        case 'textstat': return `
+          <label>输入文本</label>
+          <textarea id="textstatInput" placeholder="粘贴或输入文本，实时统计信息" oninput="calcTextStat()" style="min-height:160px"></textarea>
+          <div class="stat-grid" id="textstatResults">
+            <div class="stat-item"><div class="stat-val" id="stat-chars">0</div><div class="stat-label">字符数</div></div>
+            <div class="stat-item"><div class="stat-val" id="stat-chars-ns">0</div><div class="stat-label">不含空格</div></div>
+            <div class="stat-item"><div class="stat-val" id="stat-words">0</div><div class="stat-label">英文单词</div></div>
+            <div class="stat-item"><div class="stat-val" id="stat-cn">0</div><div class="stat-label">中文字数</div></div>
+            <div class="stat-item"><div class="stat-val" id="stat-lines">0</div><div class="stat-label">行数</div></div>
+            <div class="stat-item"><div class="stat-val" id="stat-paragraphs">0</div><div class="stat-label">段落数</div></div>
+          </div>`;
+
+        case 'regex': return `
+          <div class="inline-group">
+            <label>正则表达式</label>
+            <input type="text" id="regexPattern" placeholder="例如 \\d{4}-\\d{2}-\\d{2}" oninput="testRegex()" style="font-family:'IBM Plex Mono',monospace">
+          </div>
+          <div class="regex-flags">
+            <label class="regex-flag"><input type="checkbox" id="regexG" checked onchange="testRegex()"> g (全局)</label>
+            <label class="regex-flag"><input type="checkbox" id="regexI" onchange="testRegex()"> i (忽略大小写)</label>
+            <label class="regex-flag"><input type="checkbox" id="regexM" onchange="testRegex()"> m (多行)</label>
+          </div>
+          <label>测试文本</label>
+          <textarea id="regexText" placeholder="输入要测试的文本" oninput="testRegex()" style="min-height:120px"></textarea>
+          <div class="regex-matches" id="regexResults"></div>
+          <label>匹配高亮</label>
+          <div class="result-box" id="regexHighlight" style="min-height:40px">等待输入...</div>`;
+
+        case 'color': return `
+          <div class="inline-group">
+            <label>颜色值</label>
+            <input type="text" id="colorInput" placeholder="输入 HEX (#ff6347)、RGB (255,99,71) 或 HSL (9,100%,64%)" oninput="convertColor()">
+            <input type="color" id="colorPicker" value="#0ea585" onchange="pickColor(this.value)" style="width:44px;height:36px;padding:2px;border:1px solid rgba(255,255,255,0.1);border-radius:6px;background:transparent;cursor:pointer">
+          </div>
+          <div class="color-preview" id="colorPreview" style="background:#0ea585"></div>
+          <div class="hash-results" id="colorResults">
+            <div class="hash-row"><span class="hash-label">HEX</span><span class="hash-value" id="color-hex">#0ea585</span><button class="hash-copy" onclick="copyText(document.getElementById('color-hex').textContent)">&#128203;</button></div>
+            <div class="hash-row"><span class="hash-label">RGB</span><span class="hash-value" id="color-rgb">rgb(14, 165, 133)</span><button class="hash-copy" onclick="copyText(document.getElementById('color-rgb').textContent)">&#128203;</button></div>
+            <div class="hash-row"><span class="hash-label">HSL</span><span class="hash-value" id="color-hsl">hsl(167, 84%, 35%)</span><button class="hash-copy" onclick="copyText(document.getElementById('color-hsl').textContent)">&#128203;</button></div>
+          </div>`;
+
+        case 'password': return `
+          <div class="inline-group">
+            <label>密码长度</label>
+            <input type="number" id="pwLen" value="16" min="4" max="128" style="width:80px">
+            <button class="btn btn-primary" onclick="genPassword()">生成密码</button>
+            <button class="btn btn-secondary" onclick="copyText(document.getElementById('pwOutput').textContent)">复制</button>
+          </div>
+          <div class="pw-options">
+            <label class="pw-option"><input type="checkbox" id="pwUpper" checked> 大写字母 (A-Z)</label>
+            <label class="pw-option"><input type="checkbox" id="pwLower" checked> 小写字母 (a-z)</label>
+            <label class="pw-option"><input type="checkbox" id="pwDigit" checked> 数字 (0-9)</label>
+            <label class="pw-option"><input type="checkbox" id="pwSymbol" checked> 符号 (!@#$)</label>
+          </div>
+          <div class="pw-strength"><div class="pw-strength-bar" id="pwStrengthBar"></div></div>
+          <label style="margin-top:16px">生成结果</label>
+          <div class="result-box" id="pwOutput" style="font-size:18px;letter-spacing:2px;color:#0ea585">点击生成按钮</div>`;
+
+        case 'qrcode': return `
+          <label>输入文本或链接</label>
+          <textarea id="qrInput" placeholder="输入需要生成二维码的内容"></textarea>
+          <div class="inline-group">
+            <label>尺寸</label>
+            <select id="qrSize" style="width:100px">
+              <option value="4">小</option>
+              <option value="6" selected>中</option>
+              <option value="8">大</option>
+              <option value="12">超大</option>
+            </select>
+            <button class="btn btn-primary" onclick="genQRCode()">生成二维码</button>
+          </div>
+          <div class="qr-output" id="qrOutput"></div>`;
+
+        case 'diff': return `
+          <div class="dual-pane">
+            <div><label>原始文本</label><textarea id="diffLeft" placeholder="粘贴原始文本" style="min-height:160px"></textarea></div>
+            <div><label>对比文本</label><textarea id="diffRight" placeholder="粘贴对比文本" style="min-height:160px"></textarea></div>
+          </div>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="runDiff()">对比差异</button>
+          </div>
+          <label>对比结果</label>
+          <div class="result-box" id="diffResult" style="min-height:80px">等待对比...</div>`;
+
+        case 'case': return `
+          <label>输入英文文本</label>
+          <textarea id="caseInput" placeholder="输入需要转换大小写的英文文本"></textarea>
+          <div class="tool-actions">
+            <button class="btn btn-primary" onclick="convertCase('upper')">全部大写</button>
+            <button class="btn btn-primary" onclick="convertCase('lower')">全部小写</button>
+            <button class="btn btn-secondary" onclick="convertCase('title')">首字母大写</button>
+            <button class="btn btn-secondary" onclick="convertCase('sentence')">句首大写</button>
+            <button class="btn btn-secondary" onclick="convertCase('toggle')">大小写互换</button>
+          </div>
+          <label>转换结果</label>
+          <div class="result-box" id="caseResult">等待输入...</div>`;
+
+        default: return '<p>该工具即将上线，敬请期待。</p>';
+      }
+    }
+
+    /* ============================================
+       TOOL IMPLEMENTATIONS
+       ============================================ */
+
+    // --- JSON Formatter ---
+    function formatJSON() {
+      const input = document.getElementById('jsonInput').value.trim();
+      const out = document.getElementById('jsonResult');
+      if (!input) { out.className='result-box error'; out.textContent='请输入 JSON 数据'; return; }
+      try {
+        const obj = JSON.parse(input);
+        out.className = 'result-box success';
+        out.textContent = JSON.stringify(obj, null, 2);
+      } catch(e) {
+        out.className = 'result-box error';
+        out.textContent = 'JSON 格式错误: ' + e.message;
+      }
+    }
+    function compressJSON() {
+      const input = document.getElementById('jsonInput').value.trim();
+      const out = document.getElementById('jsonResult');
+      if (!input) { out.className='result-box error'; out.textContent='请输入 JSON 数据'; return; }
+      try {
+        const obj = JSON.parse(input);
+        out.className = 'result-box success';
+        out.textContent = JSON.stringify(obj);
+      } catch(e) {
+        out.className = 'result-box error';
+        out.textContent = 'JSON 格式错误: ' + e.message;
+      }
+    }
+
+    // --- Base64 ---
+    function encodeBase64() {
+      const input = document.getElementById('b64Input').value;
+      const out = document.getElementById('b64Result');
+      try { out.className='result-box success'; out.textContent = btoa(unescape(encodeURIComponent(input))); }
+      catch(e) { out.className='result-box error'; out.textContent='编码失败: '+e.message; }
+    }
+    function decodeBase64() {
+      const input = document.getElementById('b64Input').value;
+      const out = document.getElementById('b64Result');
+      try { out.className='result-box success'; out.textContent = decodeURIComponent(escape(atob(input))); }
+      catch(e) { out.className='result-box error'; out.textContent='解码失败: 请确认输入为有效的 Base64 字符串'; }
+    }
+
+    // --- URL Encode/Decode ---
+    function encodeURL() {
+      const input = document.getElementById('urlInput').value;
+      const out = document.getElementById('urlResult');
+      out.className='result-box success';
+      out.textContent = encodeURIComponent(input);
+    }
+    function decodeURL() {
+      const input = document.getElementById('urlInput').value;
+      const out = document.getElementById('urlResult');
+      try { out.className='result-box success'; out.textContent = decodeURIComponent(input); }
+      catch(e) { out.className='result-box error'; out.textContent='解码失败: 输入不是有效的 URL 编码字符串'; }
+    }
+
+    // --- Timestamp ---
+    function initTimestamp() { setCurrentTs(); }
+    function setCurrentTs() {
+      const now = Math.floor(Date.now()/1000);
+      document.getElementById('tsInput').value = now;
+      tsToDate();
+    }
+    function setCurrentDate() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      document.getElementById('dateInput').value =
+        `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      dateToTs();
+    }
+    function tsToDate() {
+      let ts = parseInt(document.getElementById('tsInput').value);
+      const out = document.getElementById('tsResult');
+      if (isNaN(ts)) { out.className='result-box error'; out.textContent='请输入有效的时间戳'; return; }
+      if (ts < 1e11) ts *= 1000;
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) { out.className='result-box error'; out.textContent='无效的时间戳'; return; }
+      const pad = n => String(n).padStart(2,'0');
+      out.className = 'result-box success';
+      out.textContent =
+        `本地时间: ${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}\n` +
+        `UTC 时间: ${d.toUTCString()}\n` +
+        `ISO 格式: ${d.toISOString()}\n` +
+        `时间戳(秒): ${Math.floor(d.getTime()/1000)}\n` +
+        `时间戳(毫秒): ${d.getTime()}`;
+    }
+    function dateToTs() {
+      const str = document.getElementById('dateInput').value.trim();
+      const out = document.getElementById('tsResult');
+      const d = new Date(str);
+      if (isNaN(d.getTime())) { out.className='result-box error'; out.textContent='无法解析日期，请尝试格式: 2025-06-22 12:00:00'; return; }
+      const ts = Math.floor(d.getTime()/1000);
+      out.className = 'result-box success';
+      out.textContent =
+        `时间戳(秒): ${ts}\n` +
+        `时间戳(毫秒): ${d.getTime()}\n` +
+        `ISO 格式: ${d.toISOString()}`;
+    }
+
+    // --- Hash Generator ---
+    async function calcHash() {
+      const input = document.getElementById('hashInput').value;
+      const container = document.getElementById('hashResults');
+      if (!input) { container.innerHTML = '<p style="color:#ef4444;font-size:13px">请输入文本</p>'; return; }
+      if (!crypto.subtle) {
+        container.innerHTML = '<p style="color:#f59e0b;font-size:13px">哈希功能需要 HTTPS 或 localhost 环境（当前可能为 file:// 协议）。请通过 Web 服务器访问。</p>';
+        return;
+      }
+      const enc = new TextEncoder();
+      const data = enc.encode(input);
+      const algos = ['SHA-1','SHA-256','SHA-384','SHA-512'];
+      let html = '';
+      for (const algo of algos) {
+        const buf = await crypto.subtle.digest(algo, data);
+        const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        const label = algo.replace('-','');
+        html += `<div class="hash-row">
+          <span class="hash-label">${label}</span>
+          <span class="hash-value">${hex}</span>
+          <button class="hash-copy" onclick="copyText('${hex}')">&#128203;</button>
+        </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    // --- Text Statistics ---
+    function calcTextStat() {
+      const text = document.getElementById('textstatInput').value;
+      document.getElementById('stat-chars').textContent = text.length;
+      document.getElementById('stat-chars-ns').textContent = text.replace(/\s/g,'').length;
+      document.getElementById('stat-words').textContent = (text.match(/[a-zA-Z]+/g)||[]).length;
+      document.getElementById('stat-cn').textContent = (text.match(/[\u4e00-\u9fff]/g)||[]).length;
+      document.getElementById('stat-lines').textContent = text ? text.split('\n').length : 0;
+      document.getElementById('stat-paragraphs').textContent = text ? text.split(/\n\s*\n/).filter(p=>p.trim()).length : 0;
+    }
+
+    // --- Regex Tester ---
+    function testRegex() {
+      const pattern = document.getElementById('regexPattern').value;
+      const text = document.getElementById('regexText').value;
+      const results = document.getElementById('regexResults');
+      const highlight = document.getElementById('regexHighlight');
+      if (!pattern || !text) { results.innerHTML=''; highlight.textContent='等待输入...'; return; }
+      let flags = '';
+      if (document.getElementById('regexG').checked) flags += 'g';
+      if (document.getElementById('regexI').checked) flags += 'i';
+      if (document.getElementById('regexM').checked) flags += 'm';
+      try {
+        const re = new RegExp(pattern, flags);
+        const matches = text.match(re);
+        const count = matches ? matches.length : 0;
+        results.innerHTML = `找到 <strong>${count}</strong> 个匹配`;
+        let highlighted = text;
+        if (count > 0) {
+          highlighted = text.replace(new RegExp(pattern, flags.includes('g')?flags:flags+'g'),
+            m => `<span class="highlight-match">${escapeHtml(m)}</span>`);
+        }
+        highlight.innerHTML = highlighted;
+      } catch(e) {
+        results.innerHTML = `<span style="color:#ef4444">正则表达式错误: ${e.message}</span>`;
+        highlight.textContent = text;
+      }
+    }
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // --- Color Converter ---
+    function pickColor(hex) {
+      document.getElementById('colorInput').value = hex;
+      convertColor();
+    }
+    function convertColor() {
+      const input = document.getElementById('colorInput').value.trim();
+      let r, g, b;
+      // Try HEX
+      const hexMatch = input.match(/^#?([0-9a-f]{6}|[0-9a-f]{3})$/i);
+      if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+        r = parseInt(hex.substr(0,2),16);
+        g = parseInt(hex.substr(2,2),16);
+        b = parseInt(hex.substr(4,2),16);
+      }
+      // Try RGB
+      const rgbMatch = input.match(/(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/);
+      if (rgbMatch) { r=parseInt(rgbMatch[1]); g=parseInt(rgbMatch[2]); b=parseInt(rgbMatch[3]); }
+      // Try rgb()
+      const rgbFn = input.match(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/);
+      if (rgbFn) { r=parseInt(rgbFn[1]); g=parseInt(rgbFn[2]); b=parseInt(rgbFn[3]); }
+
+      if (r===undefined || isNaN(r)) return;
+      r = Math.max(0,Math.min(255,r));
+      g = Math.max(0,Math.min(255,g));
+      b = Math.max(0,Math.min(255,b));
+
+      const hex = '#' + [r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('');
+      const [h, s, l] = rgbToHsl(r, g, b);
+
+      document.getElementById('colorPreview').style.background = hex;
+      document.getElementById('colorPicker').value = hex;
+      document.getElementById('color-hex').textContent = hex;
+      document.getElementById('color-rgb').textContent = `rgb(${r}, ${g}, ${b})`;
+      document.getElementById('color-hsl').textContent = `hsl(${h}, ${s}%, ${l}%)`;
+    }
+    function rgbToHsl(r, g, b) {
+      r/=255; g/=255; b/=255;
+      const max=Math.max(r,g,b), min=Math.min(r,g,b);
+      let h, s, l=(max+min)/2;
+      if (max===min) { h=s=0; }
+      else {
+        const d=max-min;
+        s = l>0.5 ? d/(2-max-min) : d/(max+min);
+        switch(max) {
+          case r: h=((g-b)/d+(g<b?6:0))/6; break;
+          case g: h=((b-r)/d+2)/6; break;
+          case b: h=((r-g)/d+4)/6; break;
+        }
+      }
+      return [Math.round(h*360), Math.round(s*100), Math.round(l*100)];
+    }
+
+    // --- Password Generator ---
+    function genPassword() {
+      const len = parseInt(document.getElementById('pwLen').value) || 16;
+      let chars = '';
+      if (document.getElementById('pwUpper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if (document.getElementById('pwLower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if (document.getElementById('pwDigit').checked) chars += '0123456789';
+      if (document.getElementById('pwSymbol').checked) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      if (!chars) { document.getElementById('pwOutput').textContent = '请至少选择一种字符类型'; return; }
+      const arr = new Uint32Array(len);
+      crypto.getRandomValues(arr);
+      let pw = '';
+      for (let i = 0; i < len; i++) pw += chars[arr[i] % chars.length];
+      document.getElementById('pwOutput').textContent = pw;
+      // Strength bar
+      const entropy = Math.log2(chars.length) * len;
+      const bar = document.getElementById('pwStrengthBar');
+      const pct = Math.min(100, entropy / 1.28);
+      bar.style.width = pct + '%';
+      bar.style.background = pct < 40 ? '#ef4444' : pct < 70 ? '#f59e0b' : '#0ea585';
+    }
+
+    // --- QR Code Generator (using QR Code API) ---
+    function genQRCode() {
+      const text = document.getElementById('qrInput').value.trim();
+      const output = document.getElementById('qrOutput');
+      if (!text) { output.innerHTML = '<p style="color:#6b7b8d;font-size:13px">请输入内容</p>'; return; }
+      const cellSize = parseInt(document.getElementById('qrSize').value) || 6;
+      const size = cellSize * 33 + 16;
+      // Use a canvas-based QR generation approach
+      output.innerHTML = '<p style="color:#6b7b8d">生成中...</p>';
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const s = Math.max(200, size);
+        canvas.width = s; canvas.height = s;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0d1117';
+        ctx.fillRect(0, 0, s, s);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 8, 8, s-16, s-16);
+        output.innerHTML = '';
+        output.appendChild(canvas);
+      };
+      img.onerror = () => {
+        // Fallback: use a simple text display
+        output.innerHTML = `<div style="text-align:center;padding:20px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(text)}&bgcolor=0d1117&color=0ea585" 
+               style="border-radius:8px;max-width:250px" alt="QR Code" crossorigin="anonymous">
+        </div>`;
+      };
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}&bgcolor=0d1117&color=0ea585&format=png`;
+    }
+
+    // --- Text Diff ---
+    function runDiff() {
+      const left = document.getElementById('diffLeft').value;
+      const right = document.getElementById('diffRight').value;
+      const out = document.getElementById('diffResult');
+      if (!left && !right) { out.className='result-box error'; out.textContent='请输入两段文本'; return; }
+      const leftLines = left.split('\n');
+      const rightLines = right.split('\n');
+      const maxLen = Math.max(leftLines.length, rightLines.length);
+      let html = '';
+      let additions = 0, deletions = 0, unchanged = 0;
+      for (let i = 0; i < maxLen; i++) {
+        const l = leftLines[i];
+        const r = rightLines[i];
+        if (l === r) {
+          html += `<span style="color:#6b7b8d">  ${escapeHtml(l||'')}</span>\n`;
+          unchanged++;
+        } else {
+          if (l !== undefined) { html += `<span style="color:#ef4444;background:rgba(239,68,68,0.08);display:block;padding:1px 4px;border-radius:3px">- ${escapeHtml(l)}</span>\n`; deletions++; }
+          if (r !== undefined) { html += `<span style="color:#0ea585;background:rgba(14,165,133,0.08);display:block;padding:1px 4px;border-radius:3px">+ ${escapeHtml(r)}</span>\n`; additions++; }
+        }
+      }
+      out.className = 'result-box';
+      out.innerHTML = `<div style="margin-bottom:12px;font-size:11px;color:#6b7b8d;font-family:inherit">
+        <span style="color:#0ea585">+${additions} 新增</span> &nbsp;
+        <span style="color:#ef4444">-${deletions} 删除</span> &nbsp;
+        <span>${unchanged} 未变</span>
+      </div>${html}`;
+    }
+
+    // --- Case Converter ---
+    function convertCase(mode) {
+      const input = document.getElementById('caseInput').value;
+      const out = document.getElementById('caseResult');
+      if (!input) { out.className='result-box error'; out.textContent='请输入文本'; return; }
+      let result = '';
+      switch(mode) {
+        case 'upper': result = input.toUpperCase(); break;
+        case 'lower': result = input.toLowerCase(); break;
+        case 'title': result = input.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase()); break;
+        case 'sentence': result = input.toLowerCase().replace(/(^\s*|[.!?]\s+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase()); break;
+        case 'toggle': result = input.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''); break;
+      }
+      out.className = 'result-box success';
+      out.textContent = result;
+    }
+
+    // --- Utility ---
+    function clearTool(inputId, resultId) {
+      document.getElementById(inputId).value = '';
+      document.getElementById(resultId).textContent = '等待输入...';
+      document.getElementById(resultId).className = 'result-box';
+    }
+
+    /* ============================================
+       SCROLL REVEAL
+       ============================================ */
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    /* ============================================
+       ACTIVE NAV LINK
+       ============================================ */
+    const navSections = document.querySelectorAll('.section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      navSections.forEach(section => {
+        const top = section.offsetTop - 100;
+        if (window.scrollY >= top) current = section.id;
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+      });
+    });
+
+    /* ============================================
+       INIT
+       ============================================ */
+    renderTools();
+  </script>
+</body>
+</html>
